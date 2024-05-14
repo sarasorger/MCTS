@@ -54,7 +54,9 @@ class mcts():
         self.rollout = rolloutPolicy
 
     def search(self, initialState, needDetails=False):
+        print("init. state:", initialState.board)
         self.root = treeNode(initialState, None)
+        print("root:", self.root.state.board)
 
         if self.limitType == 'time':
             timeLimit = time.time() + self.timeLimit / 1000
@@ -65,6 +67,7 @@ class mcts():
                 self.executeRound()
 
         bestChild = self.getBestChild(self.root, 0)
+        print("best child:", bestChild.state.board)
         action=(action for action, node in self.root.children.items() if node is bestChild).__next__()
         if needDetails:
             return {"action": action, "expectedReward": bestChild.totalReward / bestChild.numVisits}
@@ -75,7 +78,9 @@ class mcts():
         """
             execute a selection-expansion-simulation-backpropagation round
         """
+        #print("executing round on", self.root)
         node = self.selectNode(self.root)
+        #print(node.state.board)
         reward = self.rollout(node.state)
         self.backpropogate(node, reward)
 
@@ -111,9 +116,11 @@ class mcts():
         for child in node.children.values():
             nodeValue = node.state.getCurrentPlayer() * child.totalReward / child.numVisits + explorationValue * math.sqrt(
                 2 * math.log(node.numVisits) / child.numVisits)
+            #print("for child", child.state.board, "value:", nodeValue)
             if nodeValue > bestValue:
                 bestValue = nodeValue
                 bestNodes = [child]
             elif nodeValue == bestValue:
                 bestNodes.append(child)
+        print("for parent", node.state.board, "best nodes: ", bestNodes)
         return random.choice(bestNodes)
